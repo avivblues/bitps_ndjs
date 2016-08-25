@@ -23,6 +23,7 @@ router.get('/', function(req, res, next) {
 		getalltype = cbk;
 		console.log(getalltype);
 	});
+	console.log("all mini master loaded..");
 	// execution sql and save result to "rows"
 	db.query(sql, function(e, rows, f){if (!e) {
 				res.render('mstr_item', {
