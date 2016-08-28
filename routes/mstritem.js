@@ -1,27 +1,34 @@
 var express = require('express');
 var router = express.Router();
 var db = require('./db');
+var fs = require('fs');
+var configFile = 'routes/config.json';
+
 /* GET master item page. */
 router.get('/', function(req, res, next) {
-	
+	var dtconfig = JSON.parse(
+		fs.readFileSync(configFile)
+	);
+	//console.log("dari config:"+dtconfig.MasterItem[0].autonumber.setting);
 	sql='SELECT mstr_id,mstr_code,mstr_img,mstr_name,mstr_merk,mstr_desc,mstr_cat,mstr_um,mstr_type FROM mstr_item where mstr_status="Y"';
 	var getallcat;var getallum;
 	var getallmerk;var getalltype;
+	var setautonumber = dtconfig.MasterItem[0].autonumber.setting;
 	getallmstrcat(function(cb){
 		getallcat = cb;
-		console.log(getallcat);
+		//console.log(getallcat);
 	});
 	getallmstrum(function(cbk){
 		getallum = cbk;
-		console.log(getallum);
+		//console.log(getallum);
 	});
 	getallmstrmerk(function(cbk){
 		getallmerk = cbk;
-		console.log(getallmerk);
+		//console.log(getallmerk);
 	});
 	getallmstrtype(function(cbk){
 		getalltype = cbk;
-		console.log(getalltype);
+		//console.log(getalltype);
 	});
 	console.log("all mini master loaded..");
 	// execution sql and save result to "rows"
@@ -32,6 +39,7 @@ router.get('/', function(req, res, next) {
 				merkrows: getallmerk,
 				typerows: getalltype,
 				data: rows,
+				setautonumber: setautonumber,
 				title: 'Master Item',
 				menu:"Master"
 			});
@@ -56,14 +64,22 @@ router.post('/update', function(req, res){
 	})
 });
 router.post('/insert', function(req, res){
-	if(req.body.model.model=="single"){
-		//res.send(req.body.set);
-		db.query('insert mstr_item SET ?', [req.body.set],
-			function (err, result,f){
-			if (err) throw err;
-			console.log('insert mstr_item' + result.changedRows);
-			res.send("OK");
+	if (req.body.model.auton=="yes"){
+		var xrcode;
+		getautonumber(function(cbk){
+			//console.log(cbk[0].no);
+			xrcode = cbk[0].no;
 		});
+		req.body.set.mstr_code = xrcode;
+	}
+	if(req.body.model.model=="single"){
+		res.send(req.body.set);
+		//db.query('insert mstr_item SET ?', [req.body.set],
+		//	function (err, result,f){
+		//	if (err) throw err;
+		//	console.log('insert mstr_item' + result.changedRows);
+		//	res.send("OK");
+		//});
 	}else{
 
 	}
@@ -77,6 +93,15 @@ router.post('/newmstrcat', function(req, res){
 		res.send("OK");
 	})
 });
+// item mstr function
+function getautonumber(callback){
+	var sql = "SELECT lpad(auto_increment, 11, 0) as 'no' FROM INFORMATION_SCHEMA.TABLES WHERE table_name = 'mstr_item'";
+	db.query(sql, function(err, rows, f) {
+		callback(rows);
+	});
+}
+
+// setup category function
 function countmstrcat(callback) {
 	var sql = 'SELECT COUNT(st_id) AS "count" FROM setup_category where st_status="Y"';
 	db.query(sql, function(err, rows, f) {

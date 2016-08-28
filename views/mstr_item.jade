@@ -165,8 +165,9 @@ block halaman
 						h4#lbl_mdl_mstritem.modal-title New Form
 					.modal-body
 						.form-group
-							label Code
-							input#mdl_new_code.form-control(type='text')
+							if setautonumber=="no"
+								label Code
+								input#mdl_new_code.form-control(type='text')
 							label Name
 							input#mdl_new_name.form-control(type='text')
 							label Merk
@@ -344,9 +345,10 @@ append script
 			// Handling event elements
 			$("#btnnewproduct").click(function(){
 				if ($('#hidetblproductvarian').is(':hidden')){
+					if($("#mdl_new_code").length){var xcode = $("#mdl_new_code").val();var xauto="no";}else{var xcode = "";var xauto="yes";}
 					var data={
-					"model": {model:"single"},
-					"set":{mstr_code:$("#mdl_new_code").val(),mstr_name:$("#mdl_new_name").val(),mstr_merk:$("#selectmerk").val(),mstr_desc:$("#mdl_new_desc").val(),
+					"model": {model:"single",auton:xauto},
+					"set":{mstr_code:xcode,mstr_name:$("#mdl_new_name").val(),mstr_merk:$("#selectmerk").val(),mstr_desc:$("#mdl_new_desc").val(),
 					mstr_cat:$("#select_new_cat").val(),mstr_um:$("#select_new_um").val(),mstr_type:$("#select_new_type").val()}
 					};
 					$.ajax({
@@ -355,7 +357,7 @@ append script
 						contentType: 'application/json',
 						url: '/mstritem/insert',						
 						success: function(data) {
-							console.log(data);
+							//console.log(data);
 							alert(data);		
 						}
 					});
