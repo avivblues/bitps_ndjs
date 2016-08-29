@@ -238,7 +238,7 @@ block halaman
 							label Descriptions
 							input#mdl_edit_desc.form-control(type='text')
 							label Category
-							select#select_new_cat.form-control
+							select#select_edit_cat.form-control
 								each brdata in catrows
 									option(value=brdata.st_id)=brdata.st_name
 							label UM 
@@ -308,18 +308,6 @@ append script
 				.append(dividermerk)
 				.append(addoptionmerk)
 				.selectpicker();
-			// select category
-			var content = "<input type=text onKeyDown='event.stopPropagation();' onKeyPress='addSelectInpKeyPress(this,event)' onClick='event.stopPropagation()' placeholder='Add Category'> <span class='glyphicon glyphicon-plus addnewicon' onClick='addSelectItem(this,event,1);'></span>";
-			var divider = $('<option/>')
-				.addClass('divider')
-				.data('divider', true);
-			var addoption = $('<option/>')
-				.addClass('additem')
-				.data('content', content)
-			$('#select_new_cat')
-				.append(divider)
-				.append(addoption)
-				.selectpicker();
 			//select picker um
 			var contentum = "<input type=text onKeyDown='event.stopPropagation();' onKeyPress='addSelectInpKeyPressum(this,event)' onClick='event.stopPropagation()' placeholder='Add UM'> <span class='glyphicon glyphicon-plus addnewicon' onClick='addSelectItemum(this,event,1);'></span>";
 			var dividerum = $('<option/>')
@@ -344,12 +332,11 @@ append script
 			});
 			// Handling event elements
 			$("#btnnewproduct").click(function(){
+				if($("#mdl_new_code").length){var xcode = $("#mdl_new_code").val();var xauto="no";}else{var xcode = "";var xauto="yes";}
 				if ($('#hidetblproductvarian').is(':hidden')){
-					if($("#mdl_new_code").length){var xcode = $("#mdl_new_code").val();var xauto="no";}else{var xcode = "";var xauto="yes";}
 					var data={
 					"model": {model:"single",auton:xauto},
-					"set":{mstr_code:xcode,mstr_name:$("#mdl_new_name").val(),mstr_merk:$("#selectmerk").val(),mstr_desc:$("#mdl_new_desc").val(),
-					mstr_cat:$("#select_new_cat").val(),mstr_um:$("#select_new_um").val(),mstr_type:$("#select_new_type").val()}
+					"set":{mstr_code:xcode,mstr_name:$("#mdl_new_name").val(),mstr_merk:$("#selectmerk").val(),mstr_desc:$("#mdl_new_desc").val(),mstr_cat:$("#select_new_cat").val(),mstr_um:$("#select_new_um").val(),mstr_type:$("#select_new_type").val()}
 					};
 					$.ajax({
 						type: 'POST',
@@ -357,12 +344,28 @@ append script
 						contentType: 'application/json',
 						url: '/mstritem/insert',						
 						success: function(data) {
-							//console.log(data);
 							alert(data);		
 						}
 					});
 				}else{
-					alert("dgn Varian product!!");
+					var lastID = $("#tblproductvarian tr:last td input[type=text]").attr("ID");
+					var jmlvarian =  Math.floor(parseInt(lastID)/100);
+					var data={"model": {model:"multi",auton:xauto,jmlvarian:jmlvarian}};
+					for(var i=1;i<=jmlvarian;i++){
+						var angka=(i*100)+1;
+						var newdata = {};
+						newdata['set'+i] = {mstr_code:xcode+"."+angka,mstr_name:$("#mdl_new_name").val()+"."+$("#"+angka+"").val(),mstr_merk:$("#selectmerk").val(),mstr_desc:$("#mdl_new_desc").val(),mstr_cat:$("#select_new_cat").val(),mstr_um:$("#select_new_um").val(),mstr_type:$("#select_new_type").val()};
+						$.extend(true, data, newdata);
+					}
+					$.ajax({
+						type: 'POST',
+						data: JSON.stringify(data),
+						contentType: 'application/json',
+						url: '/mstritem/insert',						
+						success: function(data) {
+							alert(data);		
+						}
+					});
 				}
 			});
 			$("#hidetblproductvarian").click(function(){
