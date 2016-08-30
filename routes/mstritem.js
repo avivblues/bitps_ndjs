@@ -64,62 +64,24 @@ router.post('/update', function(req, res){
 	})
 });
 router.post('/insert', function(req, res){
-	
+	if (req.body.model.auton=="yes"){
+		var xrcode;
+		getautonumber(function(cbk){
+			//console.log(cbk[0].no);
+			xrcode = cbk[0].no;
+		});
+		req.body.set.mstr_code = xrcode;
+	}
 	if(req.body.model.model=="single"){
-		var data = req.body.set;
-		if (req.body.model.auton=="yes"){
-			var sql = "SELECT lpad(auto_increment, 11, 0) as 'no' FROM INFORMATION_SCHEMA.TABLES WHERE table_name = 'mstr_item'";
-			db.query(sql, function(err, rows, f) {
-				data.mstr_code=rows[0].no;
-				savenewitemsingle(data,function(cbk){
-					if(cbk.affectedRows>0){
-						res.send("Item Created..");	
-					}else{
-						res.send(cbk);
-					}
-					
-				});
-			});
-		}else{
-			savenewitemsingle(data,function(cbk){
-				if(cbk.affectedRows>0){
-					res.send("Item Created..");	
-				}else{
-					res.send(cbk);
-				}
-			});
-		}
+		res.send(req.body.set);
+		//db.query('insert mstr_item SET ?', [req.body.set],
+		//	function (err, result,f){
+		//	if (err) throw err;
+		//	console.log('insert mstr_item' + result.changedRows);
+		//	res.send("OK");
+		//});
 	}else{
-		if (req.body.model.auton=="yes"){
-			var sql = "SELECT lpad(auto_increment, 8, 0) as 'no' FROM INFORMATION_SCHEMA.TABLES WHERE table_name = 'mstr_item'";
-			db.query(sql, function(err, rows, f){
-				//console.log(req.body.model.jmlvarian);
-				var hasil;
-				for(var i=1;i<=req.body.model.jmlvarian;i++){
-					var arr = "set"+i;
-					var data = req.body[arr];
-					data.mstr_code=rows[0].no+data.mstr_code;
-					db.query('insert mstr_item SET ?', [data],function (err, result,f){
-					if (err) throw err;
-					//hasil = hasil+result.affectedRows;
-					//calback(null,hasil)
-					//http://stackoverflow.com/questions/21206696/how-to-return-value-from-node-js-function-which-contains-db-query
-					//https://docs.nodejitsu.com/articles/getting-started/control-flow/what-are-callbacks/
-					});
-					console.log(hasil);
-				}
-				console.log("luarloop="+hasil);
-				//res.send(hasil);
-			});
-		}else{
-			savenewitemdouble(data,function(cbk){
-				if(cbk.affectedRows>0){
-					res.send("Item Created..");	
-				}else{
-					res.send(cbk);
-				}
-			});
-		}
+
 	}
 });
 // ajax master cat
@@ -132,22 +94,13 @@ router.post('/newmstrcat', function(req, res){
 	})
 });
 // item mstr function
-function savenewitemsingle(data,calback){
-db.query('insert mstr_item SET ?', [data],
-	function (err, result,f){
-	if (err) throw err;
-	calback(result)
-	});
-}
-function getautonumb(callbck){
+function getautonumber(callback){
 	var sql = "SELECT lpad(auto_increment, 11, 0) as 'no' FROM INFORMATION_SCHEMA.TABLES WHERE table_name = 'mstr_item'";
 	db.query(sql, function(err, rows, f) {
-		callbck(rows);
+		callback(rows);
 	});
 }
-function getValue(value,calbk) {
-  calbk(value);
-}
+
 // setup category function
 function countmstrcat(callback) {
 	var sql = 'SELECT COUNT(st_id) AS "count" FROM setup_category where st_status="Y"';
